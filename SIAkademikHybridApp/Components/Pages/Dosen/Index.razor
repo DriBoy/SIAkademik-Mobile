@@ -1,0 +1,481 @@
+﻿
+@page "/dosen"
+@using SIAkademikHybridApp.Models
+@using SIAkademikHybridApp.Services
+@using System.Linq
+@inject DosenService DosenService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<h3 class="mt-4 mb-4">Data Dosen Universitas</h3>
+
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @successMessage
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@if (!showForm)
+{
+    <button class="btn btn-primary mb-3"
+            @onclick="ShowAddForm"
+            disabled="@isSaving">
+        + Tambah Dosen
+    </button>
+}
+
+@if (showForm)
+{
+    <div class="card mb-4 p-3">
+        <h5>@(isEdit ? "Edit Dosen" : "Tambah Dosen")</h5>
+
+        <EditForm Model="formModel" OnValidSubmit="SaveDosen">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">NIDN</label>
+                <InputText @bind-Value="formModel.Nidn"
+                           class="form-control" />
+                <ValidationMessage For="@(() => formModel.Nidn)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nama Dosen</label>
+                <InputText @bind-Value="formModel.NamaDosen"
+                           class="form-control" />
+                <ValidationMessage For="@(() => formModel.NamaDosen)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <InputText @bind-Value="formModel.Email"
+                           class="form-control" />
+                <ValidationMessage For="@(() => formModel.Email)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Prodi</label>
+                <InputText @bind-Value="formModel.Prodi"
+                           class="form-control" />
+                <ValidationMessage For="@(() => formModel.Prodi)" />
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary me-2"
+                    disabled="@isSaving">
+                @(isSaving ? "Menyimpan..." : "Simpan")
+            </button>
+
+            <button type="button"
+                    class="btn btn-secondary"
+                    @onclick="ResetForm"
+                    disabled="@isSaving">
+                Batal
+            </button>
+        </EditForm>
+    </div>
+}
+
+@if (isLoading)
+{
+    <p>Memuat data dosen...</p>
+}
+else if (listDosen == null)
+{
+    <div class="alert alert-warning">
+        Data dosen gagal dimuat. Periksa koneksi dan status API.
+
+        <button class="btn btn-sm btn-outline-primary ms-2"
+                @onclick="LoadData">
+            Coba Lagi
+        </button>
+    </div>
+}
+else if (listDosen.Count == 0)
+{
+    <div class="alert alert-info">
+        Belum ada data dosen.
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">
+            Total: @listDosen.Count dosen
+        </span>
+
+        <button class="btn btn-outline-secondary btn-sm"
+                @onclick="ResetSort">
+            Reset Sort
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>
+                        <button type="button"
+                                class="sort-button"
+                                @onclick='() => SortBy("Nidn")'>
+                            NIDN
+                            @SortIndicator("Nidn")
+                        </button>
+                    </th>
+
+                    <th>
+                        <button type="button"
+                                class="sort-button"
+                                @onclick='() => SortBy("NamaDosen")'>
+                            Nama
+                            @SortIndicator("NamaDosen")
+                        </button>
+                    </th>
+
+                    <th>
+                        <button type="button"
+                                class="sort-button"
+                                @onclick='() => SortBy("Email")'>
+                            Email
+                            @SortIndicator("Email")
+                        </button>
+                    </th>
+
+                    <th>
+                        <button type="button"
+                                class="sort-button"
+                                @onclick='() => SortBy("Prodi")'>
+                            Prodi
+                            @SortIndicator("Prodi")
+                        </button>
+                    </th>
+
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var d in SortedDosen)
+                {
+                    <tr @key="d.DosenId">
+                        <td>@d.Nidn</td>
+                        <td>@d.NamaDosen</td>
+                        <td>@d.Email</td>
+                        <td>@d.Prodi</td>
+
+                        <td class="text-nowrap">
+                            <button class="btn btn-warning btn-sm me-1"
+                                    @onclick="() => EditDosen(d)"
+                                    disabled="@isSaving"
+                                    title="Edit Dosen">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16" height="16"
+                                     fill="currentColor"
+                                     viewBox="0 0 16 16">
+                                    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708z" />
+                                    <path d="M11.207 3 13 4.793 6.5 11.293V9.5h-1.5V8z" />
+                                    <path d="M5 9v2H3v2h2v-2h2v-2z" />
+                                    <path d="M1 13.5A1.5 1.5 0 0 0 2.5 15H13a1 1 0 0 0 1-1V7h-1v7H2V3h6V2H2.5A1.5 1.5 0 0 0 1 3.5z" />
+                                </svg>
+                            </button>
+
+                            <button class="btn btn-danger btn-sm me-1"
+                                    @onclick="() => DeleteDosen(d.DosenId)"
+                                    disabled="@isSaving"
+                                    title="Hapus Dosen">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16" height="16"
+                                     fill="currentColor"
+                                     viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5" />
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9.5a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 3 13.5V4h-.5a1 1 0 0 1 0-2H5V1.5A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5V2h2.5a1 1 0 0 1 1 1M6 2h4v-.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5zm-2 2v9.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V4z" />
+                                </svg>
+                            </button>
+
+                            <button class="btn btn-info btn-sm"
+                                    @onclick="() => DetailDsn(d.DosenId)"
+                                    disabled="@isSaving"
+                                    title="Detail Dosen">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="16" height="16"
+                                     fill="currentColor"
+                                     viewBox="0 0 16 16">
+                                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" />
+                                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<style>
+    .sort-button {
+        border: none;
+        background: transparent;
+        padding: 0;
+        color: inherit;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .sort-button:hover {
+        color: #2563eb;
+    }
+</style>
+
+@code {
+    private List<DosenModel>? listDosen;
+    private DosenModel formModel = new();
+
+    private bool isEdit;
+    private bool showForm;
+    private bool isLoading;
+    private bool isSaving;
+
+    private string? successMessage;
+    private string? errorMessage;
+
+    // Sorting
+    private string sortColumn = "NamaDosen";
+    private bool sortAscending = true;
+
+    private IEnumerable<DosenModel> SortedDosen
+    {
+        get
+        {
+            var data = listDosen ?? new List<DosenModel>();
+
+            return sortColumn switch
+            {
+                "Nidn" => sortAscending
+                    ? data.OrderBy(d => d.Nidn)
+                    : data.OrderByDescending(d => d.Nidn),
+
+                "NamaDosen" => sortAscending
+                    ? data.OrderBy(d => d.NamaDosen)
+                    : data.OrderByDescending(d => d.NamaDosen),
+
+                "Email" => sortAscending
+                    ? data.OrderBy(d => d.Email)
+                    : data.OrderByDescending(d => d.Email),
+
+                "Prodi" => sortAscending
+                    ? data.OrderBy(d => d.Prodi)
+                    : data.OrderByDescending(d => d.Prodi),
+
+                _ => data.OrderBy(d => d.NamaDosen)
+            };
+        }
+    }
+
+    private string SortIndicator(string column)
+    {
+        if (sortColumn != column)
+            return "↕";
+
+        return sortAscending ? "▲" : "▼";
+    }
+
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+    }
+
+    private void ResetSort()
+    {
+        sortColumn = "NamaDosen";
+        sortAscending = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            listDosen = await DosenService.GetDosensAsync();
+        }
+        catch (Exception)
+        {
+            listDosen = null;
+            errorMessage =
+                "Gagal mengambil data dosen. " +
+                "Periksa koneksi dan status backend.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowAddForm()
+    {
+        formModel = new DosenModel();
+        isEdit = false;
+        showForm = true;
+        ClearMessages();
+    }
+
+    private void DetailDsn(int id)
+    {
+        Navigation.NavigateTo($"/dosen/detail/{id}");
+    }
+
+    private async Task SaveDosen()
+    {
+        // Cek NIDN duplikat di frontend.
+        // Saat edit, NIDN milik dosen yang sedang diedit diperbolehkan.
+        if (listDosen != null &&
+            listDosen.Any(d =>
+                string.Equals(
+                    d.Nidn?.Trim(),
+                    formModel.Nidn?.Trim(),
+                    StringComparison.OrdinalIgnoreCase)
+                && (!isEdit || d.DosenId != formModel.DosenId)))
+        {
+            errorMessage = "NIDN sudah terdaftar dalam sistem.";
+            successMessage = null;
+            return;
+        }
+
+        if (isSaving)
+            return;
+
+        ClearMessages();
+        isSaving = true;
+
+        try
+        {
+            if (isEdit)
+            {
+                await DosenService.UpdateDosenAsync(
+                    formModel.DosenId,
+                    formModel);
+
+                successMessage = "Data dosen berhasil diperbarui.";
+            }
+            else
+            {
+                await DosenService.CreateDosenAsync(formModel);
+
+                successMessage = "Data dosen berhasil ditambahkan.";
+            }
+
+            showForm = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal menyimpan dosen: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void EditDosen(DosenModel d)
+    {
+        formModel = new DosenModel
+        {
+            DosenId = d.DosenId,
+            Nidn = d.Nidn,
+            NamaDosen = d.NamaDosen,
+            Email = d.Email,
+            Prodi = d.Prodi
+        };
+
+        isEdit = true;
+        showForm = true;
+        ClearMessages();
+    }
+
+    private async Task DeleteDosen(int id)
+    {
+        if (isSaving)
+            return;
+
+        bool confirmed = await JS.InvokeAsync<bool>(
+            "confirm",
+            "Apakah kamu yakin ingin menghapus dosen ini?\n\n" +
+            "Dosen yang masih menjadi wali mahasiswa tidak dapat dihapus."
+        );
+
+        if (!confirmed)
+            return;
+
+        ClearMessages();
+        isSaving = true;
+
+        try
+        {
+            await DosenService.DeleteDosenAsync(id);
+
+            successMessage = "Data dosen berhasil dihapus.";
+            await LoadData();
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.Message.Contains("409"))
+            {
+                errorMessage =
+                    "Dosen tidak dapat dihapus karena masih menjadi dosen wali mahasiswa.";
+            }
+            else
+            {
+                errorMessage = "Gagal menghapus dosen. " + ex.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Terjadi kesalahan: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        formModel = new DosenModel();
+        isEdit = false;
+        showForm = false;
+        ClearMessages();
+    }
+
+    private void ClearMessages()
+    {
+        successMessage = null;
+        errorMessage = null;
+    }
+}

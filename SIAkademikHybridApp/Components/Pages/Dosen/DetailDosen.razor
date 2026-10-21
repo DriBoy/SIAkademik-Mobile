@@ -1,0 +1,94 @@
+﻿
+@page "/dosen/detail/{id:int}"
+@using SIAkademikHybridApp.Models
+@inject SIAkademikHybridApp.Services.DosenService DosenService
+@inject NavigationManager Navigation
+
+<PageTitle>Detail Dosen</PageTitle>
+
+<h3>Detail Dosen</h3>
+
+@if (isLoading)
+{
+    <p>Memuat data dosen...</p>
+}
+else if (dosen == null)
+{
+    <div class="alert alert-danger">
+        Data dosen tidak ditemukan.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="card-header">
+            Informasi Dosen
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>NIDN:</strong>
+                @dosen.Nidn
+            </p>
+
+            <p>
+                <strong>Nama Dosen:</strong>
+                @dosen.NamaDosen
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                @dosen.Email
+            </p>
+
+            <p>
+                <strong>Program Studi:</strong>
+                @dosen.Prodi
+            </p>
+
+            <button class="btn btn-secondary"
+                    @onclick="Kembali">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="16" height="16"
+                     fill="currentColor"
+                     viewBox="0 0 16 16"
+                     class="me-1">
+                    <path fill-rule="evenodd"
+                          d="M15 8a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8"/>
+                </svg>
+                Kembali
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private DosenModel? dosen;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            dosen = await DosenService.GetDosenByIdAsync(id);
+        }
+        catch
+        {
+            dosen = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Kembali()
+    {
+        Navigation.NavigateTo("/dosen");
+    }
+}

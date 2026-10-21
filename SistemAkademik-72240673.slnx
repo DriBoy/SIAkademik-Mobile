@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SIAkademikAPI/SIAkademikAPI.csproj" />
+  <Project Path="SIAkademikHybridApp/SIAkademikHybridApp.csproj" />
+</Solution>

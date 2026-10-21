@@ -1,0 +1,290 @@
+﻿@page "/"
+@using SIAkademikHybridApp.Models
+@using SIAkademikHybridApp.Services
+@inject MahasiswaService MahasiswaService
+@inject DosenService DosenService
+@inject NavigationManager Navigation
+
+@code {
+    private int totalMahasiswa = 0;
+    private int totalDosen = 0;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var mahasiswa = await MahasiswaService.GetMahasiswasAsync();
+            var dosen = await DosenService.GetDosensAsync();
+
+            totalMahasiswa = mahasiswa.Count;
+            totalDosen = dosen.Count;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Gagal memuat dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<PageTitle>Dashboard SIAkademik - Official</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Selamat datang di Sistem Informasi Akademik</p>
+        </div>
+        <div class="dashboard-icon">🎓</div>
+    </div>
+
+    <div class="welcome-card">
+        <h2>SIAkademik</h2>
+        <p>
+            Kelola data dosen dan mahasiswa dengan mudah
+            melalui satu aplikasi.
+        </p>
+    </div>
+
+    <h3>Ringkasan Data</h3>
+
+    <div class="stats-container">
+        <div class="stat-card student-card">
+            <div class="stat-icon">👨‍🎓</div>
+            <div>
+                <p>Total Mahasiswa</p>
+                @if (isLoading)
+                {
+                    <h2>...</h2>
+                }
+                else
+                {
+                    <h2>@totalMahasiswa</h2>
+                }
+            </div>
+        </div>
+
+        <div class="stat-card lecturer-card">
+            <div class="stat-icon">👨‍🏫</div>
+            <div>
+                <p>Total Dosen</p>
+                @if (isLoading)
+                {
+                    <h2>...</h2>
+                }
+                else
+                {
+                    <h2>@totalDosen</h2>
+                }
+            </div>
+        </div>
+    </div>
+
+    <h3>Menu Utama</h3>
+
+    <div class="menu-container">
+        <button class="menu-card"
+                @onclick="@(() => Navigation.NavigateTo("/mahasiswa"))">
+            <span class="menu-icon">👨‍🎓</span>
+            <span class="menu-text">
+                <strong>Data Mahasiswa</strong>
+                <small>Kelola data mahasiswa</small>
+            </span>
+            <span class="menu-arrow">›</span>
+        </button>
+
+        <button class="menu-card"
+                @onclick="@(() => Navigation.NavigateTo("/dosen"))">
+            <span class="menu-icon">👨‍🏫</span>
+            <span class="menu-text">
+                <strong>Data Dosen</strong>
+                <small>Kelola data dosen</small>
+            </span>
+            <span class="menu-arrow">›</span>
+        </button>
+    </div>
+
+    <div class="info-card">
+        <h3>Informasi Akademik</h3>
+        <p>
+            Pastikan data mahasiswa, NIM, NIDN, dan Dosen Wali
+            tercatat dengan benar.
+        </p>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 24px;
+        color: #1e293b;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-header h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        font-weight: 700;
+    }
+
+    .dashboard-header p {
+        margin: 0;
+        color: #64748b;
+    }
+
+    .dashboard-icon {
+        font-size: 42px;
+    }
+
+    .welcome-card {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: white;
+        border-radius: 16px;
+        padding: 26px;
+        margin-bottom: 28px;
+    }
+
+    .welcome-card h2 {
+        margin: 0 0 10px;
+        font-size: 24px;
+    }
+
+    .welcome-card p {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .dashboard-container h3 {
+        margin: 24px 0 16px;
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 22px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+    }
+
+    .stat-icon {
+        font-size: 34px;
+        background: #eff6ff;
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .stat-card p {
+        margin: 0 0 8px;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .stat-card h2 {
+        margin: 0;
+        font-size: 28px;
+    }
+
+    .menu-container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .menu-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+        color: #1e293b;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .menu-card:hover {
+        background: #f8fafc;
+        border-color: #93c5fd;
+    }
+
+    .menu-icon {
+        font-size: 30px;
+    }
+
+    .menu-text {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .menu-text strong {
+        font-size: 15px;
+    }
+
+    .menu-text small {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .menu-arrow {
+        font-size: 28px;
+        color: #64748b;
+    }
+
+    .info-card {
+        margin-top: 24px;
+        padding: 20px;
+        border-radius: 14px;
+        background: #f1f5f9;
+    }
+
+    .info-card h3 {
+        margin: 0 0 10px;
+    }
+
+    .info-card p {
+        margin: 0;
+        color: #475569;
+        line-height: 1.6;
+    }
+
+    @@media (max-width: 600px) {
+        .dashboard-container {
+            padding: 16px;
+        }
+
+        .stats-container,
+        .menu-container {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-header h1 {
+            font-size: 26px;
+        }
+    }
+</style>

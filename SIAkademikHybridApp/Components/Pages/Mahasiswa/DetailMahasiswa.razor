@@ -1,0 +1,69 @@
+﻿
+@page "/mahasiswa/detail/{id:int}"
+@using SIAkademikHybridApp.Models
+@inject SIAkademikHybridApp.Services.MahasiswaService MahasiswaService
+@inject NavigationManager Navigation
+
+<PageTitle>Detail Mahasiswa</PageTitle>
+
+<h3>Detail Mahasiswa</h3>
+
+@if (isLoading)
+{
+    <p>Memuat data mahasiswa...</p>
+}
+else if (mahasiswa == null)
+{
+    <div class="alert alert-danger">
+        Data mahasiswa tidak ditemukan.
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <p><strong>NIM:</strong> @mahasiswa.Nim</p>
+            <p><strong>Nama:</strong> @mahasiswa.NamaMahasiswa</p>
+            <p><strong>Email:</strong> @mahasiswa.Email</p>
+            <p><strong>Angkatan:</strong> @mahasiswa.Angkatan</p>
+            <p><strong>Dosen Wali:</strong> @(mahasiswa.DosenWali ?? "-")</p>
+
+            <button class="btn btn-secondary"
+                    @onclick="Kembali">
+                Kembali
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private MahasiswaModel? mahasiswa;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            mahasiswa =
+                await MahasiswaService.GetMahasiswaByIdAsync(id);
+        }
+        catch
+        {
+            mahasiswa = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Kembali()
+    {
+        Navigation.NavigateTo("/mahasiswa");
+    }
+}
